@@ -1,4 +1,10 @@
+# temp files
+*~
+\#*
+.DS_Store
+
 # scratch directory
+scratch/
 
 
 # Byte-compiled / optimized / DLL files

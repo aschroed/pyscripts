@@ -17,16 +17,15 @@ tests_require = [
 ]
 
 setup(
-    name='sample',
-    version=open("sample/_version.py").readlines()[-1].split()[-1].strip("\"'"),
-    description='starter project',
+    name='wrangling',
+    version=open("wrangling/_version.py").readlines()[-1].split()[-1].strip("\"'"),
+    description='Scripts for wrangling - one offs and things not ready to go into other packages',
     long_description=README,
-    packages=['sample'],
+    packages=['wrangling'],
     include_package_data=True,
     zip_safe=False,
-    author='4dn Team at Harvard Medical School',
-    author_email='jeremy_johnson@hms.harvard.edu',
-    url='https://data.4dnucleome.org',
+    author='Andy Schroeder',
+    author_email='andrew_schroeder@hms.harvard.edu',
     license='MIT',
     install_requires=requires,
     setup_requires=requires,

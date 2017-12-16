@@ -13,7 +13,7 @@ import importlib
 docs_dir = 'docs'
 build_dir = os.path.join(docs_dir, '_build')
 ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
-PROJECT_NAME = 'sample'
+PROJECT_NAME = 'wrangling'
 
 
 @contextmanager
@@ -127,7 +127,7 @@ def clean(ctx):
 def deploy(ctx, version=None, local=False):
     '''clean, run tests, version, tag and push tag to git for publishing to pypi through travis'''
     print("preparing for deploy...")
-    print("first lets clean everythign up.")
+    print("first lets clean everything up.")
     clean(ctx)
     print("now lets make sure the tests pass")
     test(ctx)
