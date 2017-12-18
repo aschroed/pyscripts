@@ -90,8 +90,10 @@ def test(ctx, watch=False, last_failing=False, no_flake=False, k=''):
     Note: --watch requires pytest-xdist to be installed.
     """
     import pytest
+    import pdb; pdb.set_trace()
     if not no_flake:
-        flake(ctx)
+        pass
+        #flake(ctx)
     args = []
     if k:
         args.append('-k %s' % k)
