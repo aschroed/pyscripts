@@ -6,8 +6,7 @@ with open('/Users/andrew/Desktop/ontology.json') as ontf:
 
 #sorted_data = {}
 #for key in sorted(data):
-#    sorted_data[key] = data[key]
-    
+#    sorted_data[key] = data[key
 
 with open('/Users/andrew/Desktop/pretty_ontology.json', 'w') as outfile:
     json.dump(data, outfile, indent=4, sort_keys=True)

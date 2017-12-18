@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 import argparse
-import json
+#import json
 from datetime import datetime
 from wranglertools import fdnDCIC
-import urllib
+#import urllib
 
 
 def getArgs():  # pragma: no cover
@@ -77,10 +78,9 @@ def main():  # pragma: no cover
         # print('FROM DATA CNT = ', len(items))
         # print('FROM DOWNLOAD CNT = ', acnt)
         # print('MISSING = ', mcnt)
-
+    '''
     end = datetime.now()
     print("FINISHED - START: ", str(start), "\tEND: ", str(end))
-    '''
 
 
 if __name__ == '__main__':

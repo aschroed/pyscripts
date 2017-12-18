@@ -18,8 +18,9 @@ tests_require = [
 
 setup(
     name='wrangling',
-    version=open("wrangling/_version.py").readlines()[-1].split()[-1].strip("\"'"),
-    description='Scripts for wrangling - one offs and things not ready to go into other packages',
+    version=open(
+        "wrangling/_version.py").readlines()[-1].split()[-1].strip("\"'"),
+    description='Scripts for wrangling - things not ready for other packages',
     long_description=README,
     packages=['wrangling'],
     include_package_data=True,

@@ -1,12 +1,12 @@
 import os
-import json
+#import json
 import sys
 import argparse
-import datetime
+#import datetime
 from wranglertools.fdnDCIC import (
     FDN_Key,
     FDN_Connection,
-    get_FDN,
+    #get_FDN,
     patch_FDN
 )
 
@@ -18,10 +18,10 @@ def connect2server(keyfile, keyname, app=None):
        from the named keyname in the keyfile and checks that the server can be
        reached with that key.
        Also handles keyfiles stored in s3'''
-    if keyfile == 's3':
-        assert app is not None
-        s3bucket = app.registry.settings['system_bucket']
-        keyfile = get_key(bucket=s3bucket)
+    #if keyfile == 's3':
+    #    assert app is not None
+    #    s3bucket = app.registry.settings['system_bucket']
+    #    #keyfile = get_key(bucket=s3bucket)
 
     key = FDN_Key(keyfile, keyname)
     connection = FDN_Connection(key)
@@ -96,7 +96,6 @@ def main():
             else:
                 print("FAILED TO PATCH", iid, "RESPONSE STATUS", res['status'], res['description'])
                 # print(res)
-
 
 
 if __name__ == '__main__':
