@@ -1,81 +1,124 @@
+import sys
+import os
+import argparse
+from utils.dcicutils import ff_utils as ut
+from wranglertools.fdnDCIC import (
+    FDN_Connection,
+    get_FDN,
+    patch_FDN
+)
+
 """"Creates a joint analysis tag - creating a tags field if item doesn't already,
    have one or append ja tag if it does"""
 
 
-def make_ja_tag_patch(res):
+def make_ja_tag_patch(item, tag):
     # import pdb; pdb.set_trace()
-    tag = 'Joint Analysis 2018'
-    if res.get('tags'):
-        tags = res['tags'].append(tag)
+    if item.get('tags'):
+        tags = item['tags'].append(tag)
     else:
         tags = [tag]
     return {'tags': tags}
 
 
+def get_item_ids_from_args(id_input, connection, is_search=False):
+    '''depending on the args passed return a list of item ids'''
+    if is_search:
+        urladdon = 'search/?limit=all&' + id_input
+        result = get_FDN(None, connection, None, urladdon)
+        return list(set([item.get('uuid') for item in result]))
+    try:
+        with open(id_input[0]) as inf:
+            return [l.strip() for l in inf]
+    except FileNotFoundError:
+        return id_input
+
+
+def get_args():  # pragma: no cover
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument('tag',
+                        help="The tag you want to add - eg. '4DN Standard'")
+    parser.add_argument('input', nargs='+',
+                        help="a list of ids of top level objects, \
+                        a file containing said ids one per line or a search \
+                        string (with --search option)")
+    parser.add_argument('--search',
+                        default=False,
+                        action='store_true',
+                        help='Include if you are passing in a search string \
+                        eg. type=Biosource&biosource_type=primary cell&frame=raw')
+    parser.add_argument('--taglinked',
+                        default=False,
+                        action='store_true',
+                        help='Tag items linked to items that are input')
+    parser.add_argument('--types2exclude',
+                        nargs='+',
+                        help="List of Item Types to Explicitly Exclude Tagging - \
+                        you may have some linked items that can get tags but may \
+                        not want to tag them with this tag")
+    parser.add_argument('--key',
+                        default='default',
+                        help="The keypair identifier from the keyfile.  \
+                        Default is --key=default")
+    parser.add_argument('--keyfile',
+                        default=os.path.expanduser("~/keypairs.json"),
+                        help="The keypair file.  Default is --keyfile=%s" %
+                             (os.path.expanduser("~/keypairs.json")))
+    parser.add_argument('--patchall',
+                        default=False,
+                        action='store_true',
+                        help="PATCH existing objects.  Default is False \
+                        and will only PATCH with user override")
+    args = parser.parse_args()
+    return args
+
+
 def main():
-    # items = ['1324d727-2ac8-4622-8ad3-b6e209235087', '1324d727-2ac8-4622-8ad3-b6e209235087', \"blah\", \"e58e2141-9253-4c91-85c3-d67ce06db28f\"]
-    # items = [\"431106bc-8535-4448-903e-854af460b260\"]
-    types2exclude = ['OntologyTerm', 'Ontology', 'Lab', 'User', 'Award', 'ExperimentSetReplicate']
-    releasable = get_types_that_can_have_field('public_release')
-    #search = '/search/?status=released&type=Biosource'
-    #search = '/search/?type=ExperimentSetReplicate&experimentset_type=replicate&experiments_in_set.experiment_type=repliseq&status=released'
-    search = '/search/?date_released%21=No%20value&experimentset_type=replicate&lab.title=Erez%20Lieberman%20Aiden%2C%20BCM&lab.title=Job%20Dekker%2C%20UMMS&lab.title=Bing%20Ren%2C%20UCSD&lab.title=Rene%20Maehr%2C%20UMMS&status=released&type=ExperimentSetReplicate'
-    res = fdnDCIC.get_FDN(search, ff)
+    #import pdb; pdb.set_trace()
+    args = get_args()
+    try:
+        connection = ut.fdn_connection(args.key, args.keyfile)
+    except Exception as e:
+        print("Connection failed")
+        sys.exit(1)
+    #import pdb; pdb.set_trace()
+    itemids = get_item_ids_from_args(args.input, connection, args.search)
+    taggable = ut.get_types_that_can_have_field(connection, 'tags')
+    if args.types2exclude is not None:
+        # remove explicitly provide types not to tag
+        taggable = [t for t in taggable if t not in args.types2exclude]
 
-    bsuuids = []
-
-    for item in res['graph']:
-        bsuuids.append(item['uuid'])
-
-    seen = []
-    count = 0
-    for item in res['graph']:
-        uid = item['uuid']
-        reldate = item['date_released']
-        count = count + 1
-        print '\\nWorking on ', uid, count
-        linked = {}
-        linked = get_linked_items(uid, linked)
-        flinked = filter_dict_by_value(linked, types2exclude, include=False)
-        for i, t in flinked.iteritems():
+    seen = [] # only need to add tag once so this keeps track of what's been seen
+    patch_items = {} # ids of specific items that will be patched with patch as value
+    # main loop through the top level item ids
+    for itemid in itemids:
+        items2tag = {}
+        if args.taglinked:
+            # need to get linked items and tag them
+            linked = ut.get_linked_items(connection, itemid)
+            items2tag = filter_dict_by_value(linked, taggable, include=True)
+        else:
+            # only want to tag provided items
+            itype = get_item_type(itemid, connection)
+            if itype in taggable:
+                items2tag = {itemid, itype}
+        for i, t in items2tag.items():
             if i not in seen:
-                print i, t
                 seen.append(i)
-                # import pdb; pdb.set_trace()
-                item = fdnDCIC.get_FDN(i, ff)
-                if 'public_release' not in item or 'date_released' not in item:
-                    if t in releasable:
-                        patch = {'public_release': reldate}
-                        dry_run = False
-                        if not dry_run:
-                            pres = fdnDCIC.patch_FDN(i, ff, patch)
-                            print pres
-                            print "--SUCCESS!"
-                        print "Adding Public Release Date %s to %s of type %s" % (reldate, i, t)
-    #taggable = get_types_that_can_have_field('tags')
+                item = get_FDN(i, connection)
+                if not ut.has_field_value(item, 'tags', args.tag):
+                    # not already tagged so make a patch and add 2 dict
+                    to_patch[i] = make_ja_tag_patch(item, args.tag)
 
-    #for it in items:
-    #    linked = get_linked_items(it, linked)
-
-    # more efficient to do this on the full dict rather than item by item
-    #items2tag = filter_dict_by_value(linked, taggable)
-    #for it, ty in items2tag.iteritems():
-        # import pdb; pdb.set_trace()
-        #res = fdnDCIC.get_FDN(it, ff)
-        #if not has_field_value(res, 'tags', 'Joint Analysis'):
-            # patch the item with the tag
-            #patch = make_ja_tag_patch(res)
-            #dry_run = True
-            #if not dry_run:
-                #patch = fdnDCIC.patch_FDN(it, ff, patch)
-                #print patch
-                #print \"--SUCCESS!\"
-            #print \"Adding JA tag to %s of type %s\" % (it, ty)
-
-    #linked = filter_dict_by_value(linked, exclude, include=False)
-
-    #for l, t in linked.iteritems():
-    #    print 'GOT IT: ', l, '\\t', t
+    # now do the patching or reporting
+    for pid, patch in to_patch.items():
+        if args.patchall:
+            pres = patch_FDN(i, connection, patch)
+            print(pres)
+        else:
+            print("DRY RUN: patch ", pid, " with ", patch)
 
 
 if __name__ == '__main__':
