@@ -1,7 +1,13 @@
 import sys
 import os
 import argparse
-from utils.dcicutils import ff_utils as ut
+from ff_utils import (
+    fdn_connection,
+    get_types_that_can_have_field,
+    get_linked_items,
+    filter_dict_by_value,
+    has_field_value
+)
 from wranglertools.fdnDCIC import (
     FDN_Connection,
     get_FDN,
@@ -79,13 +85,13 @@ def main():
     #import pdb; pdb.set_trace()
     args = get_args()
     try:
-        connection = ut.fdn_connection(args.key, args.keyfile)
+        connection = fdn_connection(args.key, args.keyfile)
     except Exception as e:
         print("Connection failed")
         sys.exit(1)
     #import pdb; pdb.set_trace()
     itemids = get_item_ids_from_args(args.input, connection, args.search)
-    taggable = ut.get_types_that_can_have_field(connection, 'tags')
+    taggable = get_types_that_can_have_field(connection, 'tags')
     if args.types2exclude is not None:
         # remove explicitly provide types not to tag
         taggable = [t for t in taggable if t not in args.types2exclude]
@@ -97,7 +103,7 @@ def main():
         items2tag = {}
         if args.taglinked:
             # need to get linked items and tag them
-            linked = ut.get_linked_items(connection, itemid)
+            linked = get_linked_items(connection, itemid)
             items2tag = filter_dict_by_value(linked, taggable, include=True)
         else:
             # only want to tag provided items
@@ -108,7 +114,7 @@ def main():
             if i not in seen:
                 seen.append(i)
                 item = get_FDN(i, connection)
-                if not ut.has_field_value(item, 'tags', args.tag):
+                if not has_field_value(item, 'tags', args.tag):
                     # not already tagged so make a patch and add 2 dict
                     to_patch[i] = make_ja_tag_patch(item, args.tag)
 
