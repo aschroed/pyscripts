@@ -1,6 +1,5 @@
 import pytest
 from wrangling import tagger as t
-import argparse
 
 
 @pytest.fixture

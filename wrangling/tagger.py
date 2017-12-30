@@ -6,19 +6,16 @@ from dcicutils.ff_utils import (
     get_types_that_can_have_field,
     get_linked_items,
     filter_dict_by_value,
-    has_field_value
+    has_field_value,
+    get_item_type
 )
 from wranglertools.fdnDCIC import (
-    FDN_Connection,
     get_FDN,
     patch_FDN
 )
 
-""""Creates a joint analysis tag - creating a tags field if item doesn't already,
-   have one or append ja tag if it does"""
 
-
-def make_ja_tag_patch(item, tag):
+def make_tag_patch(item, tag):
     # import pdb; pdb.set_trace()
     if item.get('tags'):
         tags = item['tags'].append(tag)
@@ -97,7 +94,7 @@ def main():
         taggable = [t for t in taggable if t not in args.types2exclude]
 
     seen = [] # only need to add tag once so this keeps track of what's been seen
-    patch_items = {} # ids of specific items that will be patched with patch as value
+    to_patch = {} # keep track of those to patch
     # main loop through the top level item ids
     for itemid in itemids:
         items2tag = {}
@@ -116,7 +113,7 @@ def main():
                 item = get_FDN(i, connection)
                 if not has_field_value(item, 'tags', args.tag):
                     # not already tagged so make a patch and add 2 dict
-                    to_patch[i] = make_ja_tag_patch(item, args.tag)
+                    to_patch[i] = make_tag_patch(item, args.tag)
 
     # now do the patching or reporting
     for pid, patch in to_patch.items():
