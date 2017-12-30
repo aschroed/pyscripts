@@ -1,7 +1,7 @@
 import sys
 import os
 import argparse
-from ff_utils import (
+from dcicutils.ff_utils import (
     fdn_connection,
     get_types_that_can_have_field,
     get_linked_items,
