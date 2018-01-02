@@ -1,7 +1,7 @@
 import sys
 import os
 import argparse
-from dcicutils.ff_utils import (
+from utils.dcicutils.ff_utils import (
     fdn_connection,
     get_types_that_can_have_field,
     get_linked_items,
@@ -10,6 +10,7 @@ from dcicutils.ff_utils import (
     get_item_type
 )
 from wranglertools.fdnDCIC import (
+    FDN_Connection,
     get_FDN,
     patch_FDN
 )
@@ -82,7 +83,7 @@ def main():
     #import pdb; pdb.set_trace()
     args = get_args()
     try:
-        connection = fdn_connection(args.key, args.keyfile)
+        connection = fdn_connection(args.keyfile, keyname=args.key)
     except Exception as e:
         print("Connection failed")
         sys.exit(1)
@@ -104,9 +105,9 @@ def main():
             items2tag = filter_dict_by_value(linked, taggable, include=True)
         else:
             # only want to tag provided items
-            itype = get_item_type(itemid, connection)
+            itype = get_item_type(connection, itemid)
             if itype in taggable:
-                items2tag = {itemid, itype}
+                items2tag = {itemid: itype}
         for i, t in items2tag.items():
             if i not in seen:
                 seen.append(i)
