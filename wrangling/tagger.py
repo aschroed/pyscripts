@@ -87,7 +87,6 @@ def get_args():  # pragma: no cover
 
 
 def main():
-    import pdb; pdb.set_trace()
     args = get_args()
     try:
         connection = ff.fdn_connection(args.keyfile, keyname=args.key)
