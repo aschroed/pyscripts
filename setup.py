@@ -9,7 +9,7 @@ requires = [
     'pytest-runner',
     'boto3',
     'Submit4DN',
-    'utils',
+    'dcicutils',
 ]
 
 tests_require = [
