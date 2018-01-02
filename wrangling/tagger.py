@@ -2,14 +2,6 @@ import sys
 import os
 import argparse
 from dcicutils import ff_utils as ff
-#    import (
-#    fdn_connection,
-#    get_types_that_can_have_field,
-#    get_linked_items,
-#    filter_dict_by_value,
-#    has_field_value,
-#    get_item_type
-#)
 from wranglertools.fdnDCIC import (
     get_FDN,
     patch_FDN
