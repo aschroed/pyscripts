@@ -10,7 +10,6 @@ from dcicutils.ff_utils import (
     get_item_type
 )
 from wranglertools.fdnDCIC import (
-    FDN_Connection,
     get_FDN,
     patch_FDN
 )
