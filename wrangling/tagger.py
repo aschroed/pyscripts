@@ -19,7 +19,8 @@ from wranglertools.fdnDCIC import (
 def make_tag_patch(item, tag):
     # import pdb; pdb.set_trace()
     if item.get('tags'):
-        tags = item['tags'].append(tag)
+        tags = item['tags']
+        tags.append(tag)
     else:
         tags = [tag]
     return {'tags': tags}
