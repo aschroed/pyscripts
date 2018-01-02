@@ -42,7 +42,6 @@ def test_make_tag_patch_no_existing_tags():
 def test_make_tag_patch_w_existing_tags():
     item = {'uuid': 'a', 'tags': ['my_tag']}
     tag = 'test_tag'
-    import pdb; pdb.set_trace()
     patch = t.make_tag_patch(item, tag)
     assert patch.get('tags')
     tags = patch.get('tags')
