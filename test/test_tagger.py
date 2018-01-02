@@ -4,7 +4,7 @@ from wrangling import tagger as t
 
 @pytest.fixture
 def connection(mocker):
-    return mocker.patch.object(t, 'fdn_connection')
+    return mocker.patch.object(t.ff, 'fdn_connection')
 
 
 @pytest.fixture

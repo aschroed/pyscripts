@@ -1,14 +1,15 @@
 import sys
 import os
 import argparse
-from dcicutils.ff_utils import (
-    fdn_connection,
-    get_types_that_can_have_field,
-    get_linked_items,
-    filter_dict_by_value,
-    has_field_value,
-    get_item_type
-)
+from dcicutils import ff_utils as ff
+#    import (
+#    fdn_connection,
+#    get_types_that_can_have_field,
+#    get_linked_items,
+#    filter_dict_by_value,
+#    has_field_value,
+#    get_item_type
+#)
 from wranglertools.fdnDCIC import (
     get_FDN,
     patch_FDN
@@ -37,21 +38,41 @@ def get_item_ids_from_args(id_input, connection, is_search=False):
         return id_input
 
 
+ff_arg_parser = argparse.ArgumentParser(add_help=False)
+ff_arg_parser.add_argument('--key',
+                           default='default',
+                           help="The keypair identifier from the keyfile.  \
+                           Default is --key=default")
+ff_arg_parser.add_argument('--keyfile',
+                           default=os.path.expanduser("~/keypairs.json"),
+                           help="The keypair file.  Default is --keyfile=%s" %
+                           (os.path.expanduser("~/keypairs.json")))
+ff_arg_parser.add_argument('--dbupdate',
+                           default=False,
+                           action='store_true',
+                           help="Do UPDATES on database objects.  Default is False \
+                           and will only UPDATE with user override")
+
+
+input_arg_parser = argparse.ArgumentParser(add_help=False)
+input_arg_parser.add_argument('input', nargs='+',
+                              help="a list of ids of top level objects, \
+                              a file containing said ids one per line or a search \
+                              string (with --search option)")
+input_arg_parser.add_argument('--search',
+                              default=False,
+                              action='store_true',
+                              help='Include if you are passing in a search string \
+                              eg. type=Biosource&biosource_type=primary cell&frame=raw')
+
+
 def get_args():  # pragma: no cover
     parser = argparse.ArgumentParser(
+        parents=[input_arg_parser, ff_arg_parser],
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument('tag',
                         help="The tag you want to add - eg. '4DN Standard'")
-    parser.add_argument('input', nargs='+',
-                        help="a list of ids of top level objects, \
-                        a file containing said ids one per line or a search \
-                        string (with --search option)")
-    parser.add_argument('--search',
-                        default=False,
-                        action='store_true',
-                        help='Include if you are passing in a search string \
-                        eg. type=Biosource&biosource_type=primary cell&frame=raw')
     parser.add_argument('--taglinked',
                         default=False,
                         action='store_true',
@@ -61,34 +82,21 @@ def get_args():  # pragma: no cover
                         help="List of Item Types to Explicitly Exclude Tagging - \
                         you may have some linked items that can get tags but may \
                         not want to tag them with this tag")
-    parser.add_argument('--key',
-                        default='default',
-                        help="The keypair identifier from the keyfile.  \
-                        Default is --key=default")
-    parser.add_argument('--keyfile',
-                        default=os.path.expanduser("~/keypairs.json"),
-                        help="The keypair file.  Default is --keyfile=%s" %
-                             (os.path.expanduser("~/keypairs.json")))
-    parser.add_argument('--patchall',
-                        default=False,
-                        action='store_true',
-                        help="PATCH existing objects.  Default is False \
-                        and will only PATCH with user override")
     args = parser.parse_args()
     return args
 
 
 def main():
-    #import pdb; pdb.set_trace()
+    import pdb; pdb.set_trace()
     args = get_args()
     try:
-        connection = fdn_connection(args.keyfile, keyname=args.key)
+        connection = ff.fdn_connection(args.keyfile, keyname=args.key)
     except Exception as e:
         print("Connection failed")
         sys.exit(1)
     #import pdb; pdb.set_trace()
     itemids = get_item_ids_from_args(args.input, connection, args.search)
-    taggable = get_types_that_can_have_field(connection, 'tags')
+    taggable = ff.get_types_that_can_have_field(connection, 'tags')
     if args.types2exclude is not None:
         # remove explicitly provide types not to tag
         taggable = [t for t in taggable if t not in args.types2exclude]
@@ -100,24 +108,24 @@ def main():
         items2tag = {}
         if args.taglinked:
             # need to get linked items and tag them
-            linked = get_linked_items(connection, itemid)
-            items2tag = filter_dict_by_value(linked, taggable, include=True)
+            linked = ff.get_linked_items(connection, itemid)
+            items2tag = ff.filter_dict_by_value(linked, taggable, include=True)
         else:
             # only want to tag provided items
-            itype = get_item_type(connection, itemid)
+            itype = ff.get_item_type(connection, itemid)
             if itype in taggable:
                 items2tag = {itemid: itype}
         for i, t in items2tag.items():
             if i not in seen:
                 seen.append(i)
                 item = get_FDN(i, connection)
-                if not has_field_value(item, 'tags', args.tag):
+                if not ff.has_field_value(item, 'tags', args.tag):
                     # not already tagged so make a patch and add 2 dict
                     to_patch[i] = make_tag_patch(item, args.tag)
 
     # now do the patching or reporting
     for pid, patch in to_patch.items():
-        if args.patchall:
+        if args.dbupdate:
             pres = patch_FDN(i, connection, patch)
             print(pres)
         else:
