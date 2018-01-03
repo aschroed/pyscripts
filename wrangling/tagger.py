@@ -18,6 +18,7 @@ def make_tag_patch(item, tag):
 
 def get_args():  # pragma: no cover
     parser = argparse.ArgumentParser(
+        description='Add a tag to provided items (and optionally their children)',
         parents=[ff.input_arg_parser, ff.ff_arg_parser],
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -43,7 +44,6 @@ def main():
     except Exception as e:
         print("Connection failed")
         sys.exit(1)
-    #import pdb; pdb.set_trace()
     itemids = ff.get_item_ids_from_args(args.input, connection, args.search)
     taggable = ff.get_types_that_can_have_field(connection, 'tags')
     if args.types2exclude is not None:
