@@ -36,4 +36,5 @@ setup(
     extras_require={
         'test': tests_require,
     },
+    dependency_links=['http://github.com/aschroed/utils.git/tarball/master#egg=package-1.0']
 )

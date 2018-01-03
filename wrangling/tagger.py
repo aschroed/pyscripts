@@ -1,7 +1,7 @@
 import sys
 import os
 import argparse
-from dcicutils import ff_utils as ff
+from my_utils_fork.dcicutils import ff_utils as ff
 from wranglertools.fdnDCIC import (
     get_FDN,
     patch_FDN
@@ -111,7 +111,7 @@ def main():
                 seen.append(i)
                 item = get_FDN(i, connection)
                 if not ff.has_field_value(item, 'tags', args.tag):
-                    # not already tagged so make a patch and add 2 dict
+                    # not already tagged with this tag so make a patch and add 2 dict
                     to_patch[i] = make_tag_patch(item, args.tag)
 
     # now do the patching or reporting
