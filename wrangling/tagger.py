@@ -1,7 +1,7 @@
 import sys
 import os
 import argparse
-from my_utils_fork.dcicutils import ff_utils as ff
+from dcicutils import ff_utils as ff
 from wranglertools.fdnDCIC import (
     get_FDN,
     patch_FDN
