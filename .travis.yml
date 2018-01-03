@@ -16,6 +16,7 @@ deploy:
 install:
 - pip install -U -r requirements-dev.txt
 - pip install -U -r requirements.txt
+- pip install -e git+https://github.com/aschroed/utils.git#egg=utils
 - pip install coveralls
 - pip install codacy-coverage
 - pip install tox
