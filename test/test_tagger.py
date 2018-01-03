@@ -1,4 +1,3 @@
-import pytest
 from wrangling import tagger as t
 
 

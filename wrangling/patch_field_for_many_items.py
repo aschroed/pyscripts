@@ -1,4 +1,3 @@
-import os
 import sys
 import argparse
 from dcicutils import ff_utils as ff
