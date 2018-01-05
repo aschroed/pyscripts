@@ -57,7 +57,7 @@ def main():
         items2tag = {}
         if args.taglinked:
             # need to get linked items and tag them
-            linked = ff.get_linked_items(connection, itemid)
+            linked = ff.get_linked_items(connection, itemid, {})
             items2tag = ff.filter_dict_by_value(linked, taggable, include=True)
         else:
             # only want to tag provided items
