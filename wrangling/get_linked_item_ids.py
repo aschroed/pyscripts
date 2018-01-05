@@ -13,7 +13,7 @@ def get_excluded(exclude_types=None, include_types=None):
         exclude.extend(exclude_types)
     if include_types is not None:
         exclude = [ty for ty in exclude if ty not in include_types]
-    return exclude
+    return list(set(exclude))
 
 
 def get_args():  # pragma: no cover
