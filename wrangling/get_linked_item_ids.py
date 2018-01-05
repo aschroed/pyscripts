@@ -1,9 +1,6 @@
 import sys
 import argparse
 from dcicutils import ff_utils as ff
-from wranglertools.fdnDCIC import (
-    get_FDN,
-)
 
 
 def get_excluded(exclude_types=None, include_types=None):
