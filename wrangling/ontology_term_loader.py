@@ -1,32 +1,22 @@
 #!/usr/bin/env python3
 
-import os
 import sys
 import argparse
 import json
 from datetime import datetime
+from dcicutils import ff_utils as ff
 from wranglertools import fdnDCIC
 
 
-def getArgs():  # pragma: no cover
+def get_args():  # pragma: no cover
     parser = argparse.ArgumentParser(
+        description='Given a file of ontology term jsons (one per line) load into db',
+        parents=[ff.ff_arg_parser],
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     parser.add_argument('infile',
                         help="the datafile containing object data to import")
-    parser.add_argument('--key',
-                        default='default',
-                        help="The keypair identifier from the keyfile.  \
-                        Default is --key=default")
-    parser.add_argument('--keyfile',
-                        default=os.path.expanduser("~/keypairs.json"),
-                        help="The keypair file.  Default is --keyfile=%s" %
-                             (os.path.expanduser("~/keypairs.json")))
-    parser.add_argument('--update',
-                        default=False,
-                        action='store_true',
-                        help="do the updates on the database")
     args = parser.parse_args()
     return args
 
@@ -43,16 +33,17 @@ def get_id(term):
 def main():  # pragma: no cover
     start = datetime.now()
     print(str(start))
-    args = getArgs()
-    key = fdnDCIC.FDN_Key(args.keyfile, args.key)
-    if key.error:
+    args = get_args()
+    try:
+        connection = ff.fdn_connection(args.keyfile, keyname=args.key)
+    except Exception as e:
+        print("Connection failed")
         sys.exit(1)
-    connection = fdnDCIC.FDN_Connection(key)
 
     phase2 = {}
     # assumes a single line corresponds to json for single term
-    if not args.update:
-        print("DRY RUN - use --update to update the database")
+    if not args.dbupdate:
+        print("DRY RUN - use --dbupdate to update the database")
     with open(args.infile) as terms:
         for t in terms:
             phase2json = {}
@@ -73,13 +64,13 @@ def main():  # pragma: no cover
                 dbterm = fdnDCIC.get_FDN(tid, connection)
                 op = ''
                 if 'OntologyTerm' in dbterm['@type']:
-                    if args.update:
+                    if args.dbupdate:
                         e = fdnDCIC.patch_FDN(dbterm["uuid"], connection, term)
                     else:
                         e = {'status': 'dry run'}
                     op = 'PATCH'
                 else:
-                    if args.update:
+                    if args.dbupdate:
                         e = fdnDCIC.new_FDN(connection, 'OntologyTerm', term)
                     else:
                         e = {'status': 'dry run'}
@@ -96,7 +87,7 @@ def main():  # pragma: no cover
 
     print("START LOADING PHASE2 at ", str(datetime.now()))
     for tid, data in phase2.items():
-        if args.update:
+        if args.dbupdate:
             e = fdnDCIC.patch_FDN(tid, connection, data)
         else:
             e = {'status': 'dry run'}

@@ -5,7 +5,7 @@ from dcicutils import ff_utils as ff
 
 def get_args():  # pragma: no cover
     parser = argparse.ArgumentParser(
-        description='Add a tag to provided items (and optionally their children)',
+        description='Provide a search query suffix and get a list of item uuids',
         parents=[ff.ff_arg_parser],
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
