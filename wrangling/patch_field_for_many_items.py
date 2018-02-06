@@ -12,9 +12,15 @@ def get_args():
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument('field',
-                        help="The field to update."),
+                        help="The field to update.")
     parser.add_argument('value',
-                        help="The value to update."),
+                        help="The value(s) to update. Array fields need \"''\" surround \
+                        even if only a single value i.e. \"'value here'\" or \"'v1' 'v2'\"")
+    parser.add_argument('--isarray',
+                        default=False,
+                        action='store_true',
+                        help="Field is an array.  Default is False \
+                        use this so value is correctly formatted even if only a single value")
     return parser.parse_args()
 
 
@@ -27,12 +33,14 @@ def main():
         sys.exit(1)
 
     id_list = ff.get_item_ids_from_args(args.input, connection, args.search)
-
+    val = args.value
+    if args.isarray:
+        val = val.split("'")[1::2]
     for iid in id_list:
-        print("PATCHING", iid, "to", args.field, "=", args.value)
+        print("PATCHING", iid, "to", args.field, "=", val)
         if (args.dbupdate):
             # do the patch
-            res = patch_FDN(iid, connection, {args.field: args.value})
+            res = patch_FDN(iid, connection, {args.field: val})
             if res['status'] == 'success':
                 print("SUCCESS!")
             else:
