@@ -1,16 +1,25 @@
 import sys
 import argparse
 from dcicutils import ff_utils as ff
+from wranglertools import fdnDCIC as fdn
 
 
 def get_excluded(exclude_types=None, include_types=None):
     # there are some types that we almost certainly want excluded
-    exclude = ['User', 'Lab', 'Award', 'OntologyTerm', 'Ontology', 'Organism']
+    exclude = ['User', 'Lab', 'Award', 'OntologyTerm', 'Ontology', 'Organism', 'Publication']
     if exclude_types is not None:
         exclude.extend(exclude_types)
     if include_types is not None:
         exclude = [ty for ty in exclude if ty not in include_types]
     return list(set(exclude))
+
+
+def is_released(itemid, connection):
+    item = fdn.get_FDN(itemid, connection)
+    if item.get('status'):
+        if item['status'] == 'released':
+            return True
+    return False
 
 
 def get_args():  # pragma: no cover
@@ -49,12 +58,17 @@ def main():
             linked = ff.filter_dict_by_value(linked, excluded_types, include=False)
         ll = [(k, linked[k]) for k in sorted(linked, key=linked.get)]
         for i, t in ll:
+            suff = ''
             if i == itemid:
-                print(i, '\t', t, '\tINPUT')
+                suff = '\tINPUT'
+            if is_released(i, connection):
+                print(i, '\t', t, '\tRELEASED - SKIPPING', suff)
             else:
-                print(i, '\t', t)
-            if i not in all_linked_ids:
-                all_linked_ids.append(i)
+                if i not in all_linked_ids:
+                    all_linked_ids.append(i)
+                else:
+                    suff = suff + '\tSEEN'
+                print(i, '\t', t, suff)
     for a in all_linked_ids:
         print(a)
 
