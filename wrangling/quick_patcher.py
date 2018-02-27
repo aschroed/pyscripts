@@ -35,7 +35,6 @@ def main():  # pragma: no cover
         print("Connection failed")
         sys.exit(1)
 
-    phase2 = {}
     # assumes a single line corresponds to json for single term
     if not args.dbupdate:
         print("DRY RUN - use --dbupdate to update the database")
