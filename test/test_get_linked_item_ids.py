@@ -2,7 +2,7 @@ from wrangling import get_linked_item_ids as gli
 
 
 def test_get_excluded_w_nothing():
-    exclude = ['User', 'Lab', 'Award', 'OntologyTerm', 'Ontology', 'Organism']
+    exclude = ['User', 'Lab', 'Award', 'OntologyTerm', 'Ontology', 'Organism', 'Publication']
     types = gli.get_excluded()
     assert sorted(exclude) == sorted(types)
 
