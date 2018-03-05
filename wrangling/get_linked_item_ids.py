@@ -37,6 +37,11 @@ def get_args():  # pragma: no cover
                         nargs='+',
                         help="List of Item Types (that are usually excluded - see \
                         --types2exclude help) that you want to include")
+    parser.add_argument('--include_released',
+                        default=False,
+                        action='store_true',
+                        help='Normally released items are skipped \
+                        - this flag includes them in the final list'),
     args = parser.parse_args()
     return args
 
@@ -62,13 +67,15 @@ def main():
             if i == itemid:
                 suff = '\tINPUT'
             if is_released(i, connection):
-                print(i, '\t', t, '\tRELEASED - SKIPPING', suff)
+                suff = '\tRELEASED' + suff
+                if not args.include_released:
+                    print(i, '\t', t, '\tSKIPPING', suff)
+                    continue
+            if i not in all_linked_ids:
+                all_linked_ids.append(i)
             else:
-                if i not in all_linked_ids:
-                    all_linked_ids.append(i)
-                else:
-                    suff = suff + '\tSEEN'
-                print(i, '\t', t, suff)
+                suff = suff + '\tSEEN'
+            print(i, '\t', t, suff)
     for a in all_linked_ids:
         print(a)
 
