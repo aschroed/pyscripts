@@ -75,8 +75,8 @@ def main():
     # now do the patching or reporting
     for pid, patch in to_patch.items():
         if args.dbupdate:
-            pres = patch_FDN(i, connection, patch)
-            print(pres)
+            pres = patch_FDN(pid, connection, patch)
+            print(pres['status'])
         else:
             print("DRY RUN: patch ", pid, " with ", patch)
 
