@@ -37,6 +37,9 @@ def get_args():  # pragma: no cover
                         nargs='+',
                         help="List of Item Types (that are usually excluded - see \
                         --types2exclude help) that you want to include")
+    parser.add_argument('--no_children',
+                        nargs='+',
+                        help="List of Item types not to get children of")
     parser.add_argument('--include_released',
                         default=False,
                         action='store_true',
@@ -55,6 +58,10 @@ def main():
         sys.exit(1)
     itemids = ff.get_item_ids_from_args(args.input, connection, args.search)
     excluded_types = get_excluded(args.types2exclude, args.types2include)
+    no_child = ['Publication', 'Lab', 'User', 'Award']  # default no_childs
+    if args.no_children:
+        no_child = list(set(no_child.extend(args.no_children)))
+
     all_linked_ids = []
     # main loop through the top level item ids
     for itemid in itemids:
