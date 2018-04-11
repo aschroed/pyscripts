@@ -118,7 +118,7 @@ def main():
             print("SKIPPING ", uid)
             cnts['skipped'] += 1
             continue
-        _ = add_tag2item(connection, uid, reltag, seen, cnts, type, dbupdate)
+        add_tag2item(connection, uid, reltag, seen, cnts, type, dbupdate)
 
         if 'ExperimentSet' in type:
             # get the experiments and files
