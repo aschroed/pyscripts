@@ -74,6 +74,7 @@ def do_patch(uid, type, patch, connection, dbupdate, cnts):
         print('DRY RUN - will update %s of type %s with %s' % (uid, type, patch))
         cnts['not_patched'] += 1
         return
+    # import pdb; pdb.set_trace()
     res = patch_FDN(uid, connection, patch)
     # res = {'status': 'testing'}
     print('UPDATING - %s of type %s with %s' % (uid, type, patch))
@@ -83,6 +84,7 @@ def do_patch(uid, type, patch, connection, dbupdate, cnts):
         cnts['patched'] += 1
     else:
         cnts['errors'] += 1
+        print(res)
     return
 
 
