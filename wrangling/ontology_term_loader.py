@@ -5,7 +5,6 @@ import argparse
 import json
 from datetime import datetime
 from dcicutils import ff_utils as ff, submit_utils as su
-from wranglertools import fdnDCIC
 
 
 def get_args():  # pragma: no cover

@@ -1,7 +1,7 @@
 import sys
 import argparse
 from dcicutils import ff_utils as ff
-from dcicutils.submit_utils import patchFDN
+from dcicutils.submit_utils import patch_FDN
 
 
 def get_args():
