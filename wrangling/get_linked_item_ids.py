@@ -1,6 +1,7 @@
 import sys
 import argparse
-from dcicutils import ff_utils as ff, submit_utils as su
+from dcicutils import ff_utils as ff
+from dcicutils.submit_utils import get_FDN
 
 
 def get_excluded(exclude_types=None, include_types=None):
@@ -14,7 +15,7 @@ def get_excluded(exclude_types=None, include_types=None):
 
 
 def is_released(itemid, connection):
-    item = su.get_FDN(itemid, connection)
+    item = get_FDN(itemid, connection)
     if item.get('status'):
         if item['status'] == 'released':
             return True
