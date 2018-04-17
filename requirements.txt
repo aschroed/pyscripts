@@ -1,2 +1,2 @@
 boto3
-Submit4DN
+dcicutils>=0.1.85
