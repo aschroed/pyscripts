@@ -3,7 +3,7 @@
 import sys
 import argparse
 from dcicutils import ff_utils as ff
-from wranglertools import fdnDCIC
+from dcicutils.submit_utils import get_FDN
 
 
 def get_args():
@@ -39,7 +39,7 @@ def main():  # pragma: no cover
             header = header.replace('#id\t', '#')
         print(header)
     for iid in id_list:
-        res = fdnDCIC.get_FDN(iid, connection)
+        res = get_FDN(iid, connection)
         if args.fields:
             line = ''
             for f in fields:

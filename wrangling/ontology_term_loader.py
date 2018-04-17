@@ -5,7 +5,7 @@ import argparse
 import json
 from datetime import datetime
 from dcicutils import ff_utils as ff
-from wranglertools import fdnDCIC
+from dcicutils.submit_utils import get_FDN, patch_FDN, new_FDN
 
 
 def get_args():  # pragma: no cover
@@ -61,17 +61,17 @@ def main():  # pragma: no cover
                     phase2json['slim_terms'] = term['slim_terms']
                     del term['slim_terms']
 
-                dbterm = fdnDCIC.get_FDN(tid, connection)
+                dbterm = get_FDN(tid, connection)
                 op = ''
                 if 'OntologyTerm' in dbterm['@type']:
                     if args.dbupdate:
-                        e = fdnDCIC.patch_FDN(dbterm["uuid"], connection, term)
+                        e = patch_FDN(dbterm["uuid"], connection, term)
                     else:
                         e = {'status': 'dry run'}
                     op = 'PATCH'
                 else:
                     if args.dbupdate:
-                        e = fdnDCIC.new_FDN(connection, 'OntologyTerm', term)
+                        e = new_FDN(connection, 'OntologyTerm', term)
                     else:
                         e = {'status': 'dry run'}
                     op = 'POST'
@@ -88,7 +88,7 @@ def main():  # pragma: no cover
     print("START LOADING PHASE2 at ", str(datetime.now()))
     for tid, data in phase2.items():
         if args.dbupdate:
-            e = fdnDCIC.patch_FDN(tid, connection, data)
+            e = patch_FDN(tid, connection, data)
         else:
             e = {'status': 'dry run'}
         status = e.get('status')

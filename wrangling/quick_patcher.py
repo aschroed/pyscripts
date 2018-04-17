@@ -9,7 +9,7 @@ import argparse
 import json
 from datetime import datetime
 from dcicutils import ff_utils as ff
-from wranglertools import fdnDCIC
+from dcicutils.submit_utils import patch_FDN
 
 
 def get_args():  # pragma: no cover
@@ -43,7 +43,7 @@ def main():  # pragma: no cover
             [iid, payload] = [t.strip() for t in i.split('\t')]
             payload = json.loads(payload)
             if args.dbupdate:
-                e = fdnDCIC.patch_FDN(iid, connection, payload)
+                e = patch_FDN(iid, connection, payload)
             else:
                 print("DRY RUN\n\tPATCH: ", iid, " TO\n", payload)
                 e = {'status': 'success'}

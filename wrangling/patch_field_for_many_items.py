@@ -1,9 +1,7 @@
 import sys
 import argparse
 from dcicutils import ff_utils as ff
-from wranglertools.fdnDCIC import (
-    patch_FDN
-)
+from dcicutils.submit_utils import patch_FDN
 
 
 def get_args():

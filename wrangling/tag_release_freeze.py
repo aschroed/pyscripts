@@ -2,10 +2,7 @@ import sys
 import argparse
 from collections import Counter
 from dcicutils import ff_utils as ff
-from wranglertools.fdnDCIC import (
-    get_FDN,
-    patch_FDN
-)
+from dcicutils.submit_utils import get_FDN, patch_FDN
 
 
 def get_args():
