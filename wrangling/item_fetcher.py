@@ -32,23 +32,30 @@ def main():  # pragma: no cover
         sys.exit(1)
 
     id_list = ff.get_item_ids_from_args(args.input, connection, args.search)
+    #import pdb; pdb.set_trace()
     if args.fields:
         fields = args.fields
 
         header = '#id\t' + '\t'.join(fields)
-        if args.noid:
+        if args.noid is True:
             header = header.replace('#id\t', '#')
         print(header)
     for iid in id_list:
         res = fdnDCIC.get_FDN(iid, connection)
         if args.fields:
-            lstart = iid + '\t'
-            line = lstart + '\t'.join([res.get(f) for f in fields])
-            if args.noid:
-                line = line.replace(lstart, '')
+            line = ''
+            for f in fields:
+                val = res.get(f)
+                if isinstance(val, list):
+                    val = ', '.join(val)
+                    if val.endswith(', '):
+                        val = val[:-2]
+                line = line + str(val) + '\t'
+            if args.noid is False:
+                line = lstart + line
             print(line)
         else:
-            if args.noid:
+            if args.noid is True:
                 print(res)
             else:
                 print(iid, '\t', res)
