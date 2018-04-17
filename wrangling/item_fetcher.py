@@ -1,86 +1,62 @@
 #!/usr/bin/env python3
 
-import os
 import sys
 import argparse
-#import json
-from datetime import datetime
+from dcicutils import ff_utils as ff
 from wranglertools import fdnDCIC
-#import urllib
 
 
-def getArgs():  # pragma: no cover
+def get_args():
     parser = argparse.ArgumentParser(
+        parents=[ff.input_arg_parser, ff.ff_arg_parser],
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-
-    parser.add_argument('--key',
-                        default='default',
-                        help="The keypair identifier from the keyfile.  \
-                        Default is --key=default")
-    parser.add_argument('--keyfile',
-                        default=os.path.expanduser("~/keypairs.json"),
-                        help="The keypair file.  Default is --keyfile=%s" %
-                             (os.path.expanduser("~/keypairs.json")))
-    parser.add_argument('--patchall',
-                        default=False,
+    parser.add_argument('--fields',
+                        nargs='+',
+                        help="The item fields to retrieve/report.")
+    parser.add_argument('--noid',
                         action='store_true',
-                        help="PATCH existing objects.  Default is False \
-                        and will only PATCH with user override")
-    args = parser.parse_args()
-    return args
+                        default='False')
+
+    return parser.parse_args()
 
 
 def main():  # pragma: no cover
-    # import pdb; pdb.set_trace()
-    start = datetime.now()
-    args = getArgs()
-    key = fdnDCIC.FDN_Key(args.keyfile, args.key)
-    if key.error:
+    args = get_args()
+    try:
+        connection = ff.fdn_connection(args.keyfile, keyname=args.key)
+    except Exception as e:
+        print("Connection failed")
         sys.exit(1)
-    connection = fdnDCIC.FDN_Connection(key)
-    capc_file = '/Users/andrew/Desktop/capc_aliases.txt'
-    with open(capc_file) as fn:
-        for l in fn:
-            res = fdnDCIC.get_FDN(l.strip(), connection)
-            if res.get('uuid'):
-                print(res['uuid'])
 
-    '''
-    #    nofics = [n.strip() for n in list(fn)]
+    id_list = ff.get_item_ids_from_args(args.input, connection, args.search)
+    #import pdb; pdb.set_trace()
+    if args.fields:
+        fields = args.fields
 
-    #user_file = '/Users/andrew/Documents/work/4DN_Metadata/UsersLabsAwards/4DN_Users.csv'
-    #with open(user_file) as uf:
-    #    for l in uf:
-    #        fields = l.split(',')
-    #items = 'blah'
-    #for item in items:
-    #    fuuid = item['uuid']
-    #    falias = item['aliases'][0]
-
-        # with open(file2) as f2:
-        #    for dlacc in f2:
-        #        acnt += 1
-        #        if dlacc.strip() not in dacc:
-        #            print(dlacc.strip())
-        #            mcnt += 1
-
-        #if args.patchall:
-        #    res = fdnDCIC.patch_FDN(fuuid, connection, {'status': 'released'})
-        #    print(res['status'])
-        #else:
-        #    print("DRY RUN")
-        #res = fdnDCIC.get_FDN(item, connection)
-        #print(res)
-        #print("Patching %s uuid: %s to status=released" % (falias, fuuid))
-        #print(len(items))
-
-        # print('FROM DATA CNT = ', len(items))
-        # print('FROM DOWNLOAD CNT = ', acnt)
-        # print('MISSING = ', mcnt)
-    '''
-    end = datetime.now()
-    print("FINISHED - START: ", str(start), "\tEND: ", str(end))
+        header = '#id\t' + '\t'.join(fields)
+        if args.noid is True:
+            header = header.replace('#id\t', '#')
+        print(header)
+    for iid in id_list:
+        res = fdnDCIC.get_FDN(iid, connection)
+        if args.fields:
+            line = ''
+            for f in fields:
+                val = res.get(f)
+                if isinstance(val, list):
+                    val = ', '.join(val)
+                    if val.endswith(', '):
+                        val = val[:-2]
+                line = line + str(val) + '\t'
+            if args.noid is False:
+                line = iid + '\t' + line
+            print(line)
+        else:
+            if args.noid is True:
+                print(res)
+            else:
+                print(iid, '\t', res)
 
 
 if __name__ == '__main__':
