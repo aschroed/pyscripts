@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
-import os
 import sys
 import argparse
 from dcicutils import ff_utils as ff
-from datetime import datetime
 from wranglertools import fdnDCIC
 
 
@@ -52,7 +50,7 @@ def main():  # pragma: no cover
                         val = val[:-2]
                 line = line + str(val) + '\t'
             if args.noid is False:
-                line = lstart + line
+                line = iid + '\t' + line
             print(line)
         else:
             if args.noid is True:
