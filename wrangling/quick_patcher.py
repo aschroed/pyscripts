@@ -10,7 +10,7 @@ import json
 from datetime import datetime
 from dcicutils.ff_utils import fdn_connection
 from dcicutils.submit_utils import patch_FDN
-from script_utils import create_ff_arg_parser
+from pyscripts.wrangling.script_utils import create_ff_arg_parser
 
 
 def get_args():  # pragma: no cover

@@ -5,7 +5,7 @@ from dcicutils.submit_utils import (
     get_FDN,
     patch_FDN
 )
-import script_utils as scu
+from pyscripts.wrangling import script_utils as scu
 
 
 def make_tag_patch(item, tag):

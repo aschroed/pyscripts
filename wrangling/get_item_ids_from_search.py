@@ -1,7 +1,7 @@
 import sys
 import argparse
 from dcicutils import ff_utils as ff
-import script_utils as scu
+from pyscripts.wrangling import script_utils as scu
 
 
 def get_args():  # pragma: no cover

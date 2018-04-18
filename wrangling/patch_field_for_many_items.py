@@ -2,7 +2,7 @@ import sys
 import argparse
 from dcicutils.ff_utils import fdn_connection
 from dcicutils.submit_utils import patch_FDN
-import script_utils as scu
+from pyscripts.wrangling import script_utils as scu
 
 
 def get_args():
