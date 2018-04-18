@@ -1,5 +1,5 @@
 import os
-from uuid import uuid4, UUID
+from uuid import UUID
 import copy
 import argparse
 from dcicutils import submit_utils
@@ -47,7 +47,7 @@ def get_item_ids_from_args(id_input, connection, is_search=False):
                 pass
         query = 'search/?' + id_input[0]
         results = []
-        safe_search_with_callback(connection, query, results, search_callback)
+        submit_utils.safe_search_with_callback(connection, query, results, search_callback)
         return list(set(results))
     try:
         with open(id_input[0]) as inf:
