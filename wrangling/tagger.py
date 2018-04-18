@@ -19,7 +19,7 @@ def make_tag_patch(item, tag):
 def get_args():  # pragma: no cover
     parser = argparse.ArgumentParser(
         description='Add a tag to provided items (and optionally their children)',
-        parents=[ff.input_arg_parser, ff.ff_arg_parser],
+        parents=[ff.create_input_arg_parser(), ff.create_ff_arg_parser()],
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument('tag',

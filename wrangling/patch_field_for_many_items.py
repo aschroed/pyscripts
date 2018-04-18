@@ -6,7 +6,7 @@ from dcicutils.submit_utils import patch_FDN
 
 def get_args():
     parser = argparse.ArgumentParser(
-        parents=[ff.input_arg_parser, ff.ff_arg_parser],
+        parents=[ff.create_input_arg_parser(), ff.create_ff_arg_parser()],
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument('field',

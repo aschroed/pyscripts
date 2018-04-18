@@ -7,7 +7,7 @@ from dcicutils.submit_utils import get_FDN, patch_FDN
 
 def get_args():
     parser = argparse.ArgumentParser(
-        parents=[ff.ff_arg_parser],
+        parents=[ff.create_ff_arg_parser()],
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument('reltag',

@@ -15,7 +15,7 @@ from dcicutils.submit_utils import patch_FDN
 def get_args():  # pragma: no cover
     parser = argparse.ArgumentParser(
         description='Given a file of ontology term jsons (one per line) load into db',
-        parents=[ff.ff_arg_parser],
+        parents=[ff.create_ff_arg_parser()],
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
