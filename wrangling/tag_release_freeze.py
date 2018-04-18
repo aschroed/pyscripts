@@ -1,13 +1,14 @@
 import sys
 import argparse
 from collections import Counter
-from dcicutils import ff_utils as ff
+from dcicutils.ff_utils import fdn_connection
 from dcicutils.submit_utils import get_FDN, patch_FDN
+import script_utils as scu
 
 
 def get_args():
     parser = argparse.ArgumentParser(
-        parents=[ff.create_ff_arg_parser()],
+        parents=[scu.create_ff_arg_parser()],
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument('reltag',
@@ -55,7 +56,7 @@ def add_tag2item(connection, item, tag, seen, cnts, itype=None, dbupdate=False):
 
 
 def make_tag_patch(item, tag):
-    if not ff.has_field_value(item, 'tags', tag):
+    if not scu.has_field_value(item, 'tags', tag):
         # not already tagged with this tag so make a patch and add 2 dict
         if item.get('tags'):
             tags = item['tags']
@@ -89,7 +90,7 @@ def main():
     args = get_args()
     dbupdate = args.dbupdate
     try:
-        connection = ff.fdn_connection(args.keyfile, keyname=args.key)
+        connection = fdn_connection(args.keyfile, keyname=args.key)
     except Exception as e:
         print("Connection failed")
         sys.exit(1)
@@ -98,7 +99,7 @@ def main():
     reltag = args.reltag
     # build the search query string
     query = 'type=DataReleaseUpdate&update_tag=' + reltag
-    relupdates = ff.get_item_ids_from_args([query], connection, True)
+    relupdates = scu.get_item_ids_from_args([query], connection, True)
     update_items = []
     for u in relupdates:
         res = get_FDN(u, connection)

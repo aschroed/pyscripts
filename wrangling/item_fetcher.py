@@ -2,13 +2,14 @@
 
 import sys
 import argparse
-from dcicutils import ff_utils as ff
+from dcicutils.ff_utils import fdn_connection
 from dcicutils.submit_utils import get_FDN
+import script_utils as scu
 
 
 def get_args():
     parser = argparse.ArgumentParser(
-        parents=[ff.create_input_arg_parser(), ff.create_ff_arg_parser()],
+        parents=[scu.create_input_arg_parser(), scu.create_ff_arg_parser()],
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument('--fields',
@@ -24,12 +25,12 @@ def get_args():
 def main():  # pragma: no cover
     args = get_args()
     try:
-        connection = ff.fdn_connection(args.keyfile, keyname=args.key)
+        connection = fdn_connection(args.keyfile, keyname=args.key)
     except Exception as e:
         print("Connection failed")
         sys.exit(1)
 
-    id_list = ff.get_item_ids_from_args(args.input, connection, args.search)
+    id_list = scu.get_item_ids_from_args(args.input, connection, args.search)
     #import pdb; pdb.set_trace()
     if args.fields:
         fields = args.fields

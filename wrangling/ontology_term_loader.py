@@ -4,14 +4,15 @@ import sys
 import argparse
 import json
 from datetime import datetime
-from dcicutils import ff_utils as ff
+from dcicutils.ff_utils import fdn_connection
 from dcicutils.submit_utils import get_FDN, patch_FDN, new_FDN
+from script_utils import create_ff_arg_parser
 
 
 def get_args():  # pragma: no cover
     parser = argparse.ArgumentParser(
         description='Given a file of ontology term jsons (one per line) load into db',
-        parents=[ff.create_ff_arg_parser()],
+        parents=[create_ff_arg_parser()],
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
@@ -35,7 +36,7 @@ def main():  # pragma: no cover
     print(str(start))
     args = get_args()
     try:
-        connection = ff.fdn_connection(args.keyfile, keyname=args.key)
+        connection = fdn_connection(args.keyfile, keyname=args.key)
     except Exception as e:
         print("Connection failed")
         sys.exit(1)

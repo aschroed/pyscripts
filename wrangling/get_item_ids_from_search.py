@@ -1,12 +1,13 @@
 import sys
 import argparse
 from dcicutils import ff_utils as ff
+import script_utils as scu
 
 
 def get_args():  # pragma: no cover
     parser = argparse.ArgumentParser(
         description='Provide a search query suffix and get a list of item uuids',
-        parents=[ff.create_ff_arg_parser()],
+        parents=[scu.create_ff_arg_parser()],
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument('query',
@@ -24,7 +25,7 @@ def main():
         print("Connection failed")
         sys.exit(1)
     #import pdb; pdb.set_trace()
-    itemids = ff.get_item_ids_from_args([args.query], connection, True)
+    itemids = scu.get_item_ids_from_args([args.query], connection, True)
     for itemid in itemids:
         print(itemid)
 

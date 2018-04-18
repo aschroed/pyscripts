@@ -1,10 +1,11 @@
 import sys
 import argparse
-from dcicutils import ff_utils as ff
+from dcicutils.ff_utils import fdn_connection
 from dcicutils.submit_utils import (
     get_FDN,
     patch_FDN
 )
+import script_utils as scu
 
 
 def make_tag_patch(item, tag):
@@ -19,7 +20,7 @@ def make_tag_patch(item, tag):
 def get_args():  # pragma: no cover
     parser = argparse.ArgumentParser(
         description='Add a tag to provided items (and optionally their children)',
-        parents=[ff.create_input_arg_parser(), ff.create_ff_arg_parser()],
+        parents=[scu.create_input_arg_parser(), scu.create_ff_arg_parser()],
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument('tag',
@@ -40,12 +41,12 @@ def get_args():  # pragma: no cover
 def main():
     args = get_args()
     try:
-        connection = ff.fdn_connection(args.keyfile, keyname=args.key)
+        connection = fdn_connection(args.keyfile, keyname=args.key)
     except Exception as e:
         print("Connection failed")
         sys.exit(1)
-    itemids = ff.get_item_ids_from_args(args.input, connection, args.search)
-    taggable = ff.get_types_that_can_have_field(connection, 'tags')
+    itemids = scu.get_item_ids_from_args(args.input, connection, args.search)
+    taggable = scu.get_types_that_can_have_field(connection, 'tags')
     if args.types2exclude is not None:
         # remove explicitly provide types not to tag
         taggable = [t for t in taggable if t not in args.types2exclude]
@@ -57,18 +58,18 @@ def main():
         items2tag = {}
         if args.taglinked:
             # need to get linked items and tag them
-            linked = ff.get_linked_items(connection, itemid, {})
-            items2tag = ff.filter_dict_by_value(linked, taggable, include=True)
+            linked = scu.get_linked_items(connection, itemid, {})
+            items2tag = scu.filter_dict_by_value(linked, taggable, include=True)
         else:
             # only want to tag provided items
-            itype = ff.get_item_type(connection, itemid)
+            itype = scu.get_item_type(connection, itemid)
             if itype in taggable:
                 items2tag = {itemid: itype}
         for i, t in items2tag.items():
             if i not in seen:
                 seen.append(i)
                 item = get_FDN(i, connection)
-                if not ff.has_field_value(item, 'tags', args.tag):
+                if not scu.has_field_value(item, 'tags', args.tag):
                     # not already tagged with this tag so make a patch and add 2 dict
                     to_patch[i] = make_tag_patch(item, args.tag)
 

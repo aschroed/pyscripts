@@ -1,7 +1,8 @@
 import sys
 import argparse
-from dcicutils import ff_utils as ff
+from dcicutils.ff_utils import fdn_connection
 from dcicutils.submit_utils import get_FDN
+import script_utils as scu
 
 
 def get_excluded(exclude_types=None, include_types=None):
@@ -25,7 +26,7 @@ def is_released(itemid, connection):
 def get_args():  # pragma: no cover
     parser = argparse.ArgumentParser(
         description='Add a tag to provided items (and optionally their children)',
-        parents=[ff.create_input_arg_parser(), ff.create_ff_arg_parser()],
+        parents=[scu.create_input_arg_parser(), scu.create_ff_arg_parser()],
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument('--types2exclude',
@@ -52,11 +53,11 @@ def get_args():  # pragma: no cover
 def main():
     args = get_args()
     try:
-        connection = ff.fdn_connection(args.keyfile, keyname=args.key)
+        connection = fdn_connection(args.keyfile, keyname=args.key)
     except Exception as e:
         print("Connection failed")
         sys.exit(1)
-    itemids = ff.get_item_ids_from_args(args.input, connection, args.search)
+    itemids = scu.get_item_ids_from_args(args.input, connection, args.search)
     excluded_types = get_excluded(args.types2exclude, args.types2include)
     no_child = ['Publication', 'Lab', 'User', 'Award']  # default no_childs
     if args.no_children:
@@ -65,9 +66,9 @@ def main():
     all_linked_ids = []
     # main loop through the top level item ids
     for itemid in itemids:
-        linked = ff.get_linked_items(connection, itemid, {})
+        linked = scu.get_linked_items(connection, itemid, {})
         if excluded_types is not None:
-            linked = ff.filter_dict_by_value(linked, excluded_types, include=False)
+            linked = scu.filter_dict_by_value(linked, excluded_types, include=False)
         ll = [(k, linked[k]) for k in sorted(linked, key=linked.get)]
         for i, t in ll:
             suff = ''
