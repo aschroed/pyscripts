@@ -50,7 +50,7 @@ def main():  # pragma: no cover
                     if val.endswith(', '):
                         val = val[:-2]
                 line = line + str(val) + '\t'
-            if args.noid is False:
+            if args.noid == 'False':
                 line = iid + '\t' + line
             print(line)
         else:
