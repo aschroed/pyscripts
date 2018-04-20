@@ -3,6 +3,7 @@ from uuid import UUID
 import copy
 import argparse
 from dcicutils import submit_utils
+from dcicutils.ff_utils import search_metadata
 
 
 def create_ff_arg_parser():
@@ -47,7 +48,7 @@ def get_item_ids_from_args(id_input, connection, is_search=False):
                 pass
         query = 'search/?' + id_input[0]
         results = []
-        submit_utils.safe_search_with_callback(connection, query, results, search_callback)
+        safe_search_with_callback(connection, query, results, search_callback)
         return list(set(results))
     try:
         with open(id_input[0]) as inf:
@@ -69,7 +70,7 @@ def safe_search_with_callback(fdn_conn, query, container, callback, limit=20, fr
     while not last_total or last_total == limit:
         print('...', curr_from)
         search_query = ''.join([query, '&from=', str(curr_from), '&limit=', str(limit)])
-        search_res = submit_utils.search_metadata(search_query, connection=fdn_conn, frame=frame)
+        search_res = search_metadata(search_query, connection=fdn_conn, frame=frame)
         if not search_res:  # 0 results
             break
         last_total = len(search_res)
