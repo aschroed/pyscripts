@@ -79,6 +79,14 @@ def safe_search_with_callback(fdn_conn, query, container, callback, limit=20, fr
             callback(hit, container)
 
 
+def get_item_uuid(iid, connection):
+    """return a uuid for an item passed another id type"""
+    if is_uuid(iid):
+        return iid
+    res = submit_utils.get_FDN(iid, connection)
+    return res.get('uuid')
+
+
 def is_uuid(value):
     """Does the string look like a uuid"""
     if '-' not in value:
