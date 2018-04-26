@@ -23,7 +23,7 @@ def get_args():
     return parser.parse_args()
 
 
-def remove_skipped_vals(val, vals2skip, connection=None):
+def remove_skipped_vals(val, vals2skip=None, connection=None):
     if not vals2skip:
         return val
     is_string = False
@@ -33,8 +33,12 @@ def remove_skipped_vals(val, vals2skip, connection=None):
 
     val = [v for v in val if v not in vals2skip]
     if connection:
-        vuuids = [scu.get_item_uuid(v) for v in val]
-        skuids = [scu.get_item_uuid(v) for v in vals2skip]
+        vuuids = [scu.get_item_uuid(v, connection) for v in val]
+        skuids = [scu.get_item_uuid(v, connection) for v in vals2skip]
+        for i, v in enumerate(vuuids):
+            if v is not None:
+                if v in skuids:
+                    del val[i]
     if val:
         if is_string:
             return val[0]
