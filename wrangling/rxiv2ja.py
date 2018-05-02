@@ -88,12 +88,14 @@ def patch_and_report(connection, patch_d, skipped, uuid2patch, dryrun):
 
         if not dryrun:
             # do the patch
-            # res = {'status': 'success'}  # for testing
             res = patch_FDN(uuid2patch, connection, patch_d)
             if res['status'] == 'success':
                 print("SUCCESS!")
+                return True
             else:
                 print("FAILED TO PATCH", uuid2patch, "RESPONSE STATUS", res['status'], res['description'])
+                return False
+    return True
 
 
 def main():  # pragma: no cover
@@ -123,7 +125,25 @@ def main():  # pragma: no cover
     if 'url' in biorxiv:
         patch_dict, skipped = move_old_url_to_new_aka(biorxiv['url'], patch_dict, skipped)
 
-    patch_and_report(connection, patch_dict, skipped, juuid, dryrun)
+    # do the patch
+    ok = patch_and_report(connection, patch_dict, skipped, juuid, dryrun)
+
+    if not ok:
+        break  # bail out if initial transfer doesn't work
+
+    # find items with reference to old paper
+    buuid = biorxiv.get('uuid')
+    search = "type=Item&references.uuid=" + buuid
+    itemids = scu.get_item_ids_from_args([search], connection, True)
+    complete = True
+    if not itemids:
+        print("No references to %s found." % buuid)
+    for iid in itemids:
+        ok = patch_and_report(connection, {'references': [juuid]}, None, iid, dryrun)
+        if not ok and complete:
+            complete = False
+    if not complete:
+        print("ALL REFERENCES POINTING TO %s NOT UPDATED - CHECK AND FIX!" % buuid)
 
 
 if __name__ == '__main__':
