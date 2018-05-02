@@ -24,7 +24,7 @@ def get_args():
 
 
 def remove_skipped_vals(val, vals2skip=None, connection=None):
-    if not vals2skip:
+    if not (val and vals2skip):
         return val
     is_string = False
     if isinstance(val, str):
@@ -46,14 +46,14 @@ def remove_skipped_vals(val, vals2skip=None, connection=None):
     return None
 
 
-def transfer_from_old2new(old, new, fields2move, vals2skip=None):
+def create_patch_for_new_from_old(old, new, fields2move, vals2skip=None):
     # build the patch dictionary
     ja_patch_dict = {}
     skipped = {}  # has info on skipped fields
     for f in fields2move:
         val = old.get(f)
+        val = remove_skipped_vals(val, vals2skip)
         if val:
-            val = remove_skipped_vals(val, vals2skip)
             jval = new.get(f)  # see if the field already has data in new item
             if jval:
                 skipped[f] = {'old': val, 'new': jval}
@@ -98,6 +98,19 @@ def patch_and_report(connection, patch_d, skipped, uuid2patch, dryrun):
     return True
 
 
+def find_and_patch_item_references(connection, olduuid, newuuid, dryrun):
+    search = "type=Item&references.uuid=" + olduuid
+    itemids = scu.get_item_ids_from_args([search], connection, True)
+    complete = True
+    if not itemids:
+        print("No references to %s found." % olduuid)
+    for iid in itemids:
+        ok = patch_and_report(connection, {'references': [newuuid]}, None, iid, dryrun)
+        if not ok and complete:
+            complete = False
+    return complete
+
+
 def main():  # pragma: no cover
     args = get_args()
     try:
@@ -120,8 +133,8 @@ def main():  # pragma: no cover
     # make sure we can get the uuid to patch
     juuid = jarticle.get('uuid')
     # build the patch dictionary
-    fields2transfer = ['categories', 'exp_sets_prod_in_pub', 'exp_sets_used_in_pub']
-    patch_dict, skipped = transfer_from_old2new(biorxiv, jarticle, fields2transfer, args.vals2skip)
+    fields2transfer = ['categories', 'exp_sets_prod_in_pub', 'exp_sets_used_in_pub', 'published_by']
+    patch_dict, skipped = create_patch_for_new_from_old(biorxiv, jarticle, fields2transfer, args.vals2skip)
     if 'url' in biorxiv:
         patch_dict, skipped = move_old_url_to_new_aka(biorxiv['url'], patch_dict, skipped)
 
@@ -133,15 +146,7 @@ def main():  # pragma: no cover
 
     # find items with reference to old paper
     buuid = biorxiv.get('uuid')
-    search = "type=Item&references.uuid=" + buuid
-    itemids = scu.get_item_ids_from_args([search], connection, True)
-    complete = True
-    if not itemids:
-        print("No references to %s found." % buuid)
-    for iid in itemids:
-        ok = patch_and_report(connection, {'references': [juuid]}, None, iid, dryrun)
-        if not ok and complete:
-            complete = False
+    complete = find_and_patch_item_references(connection, buuid, juuid, dryrun)
     if not complete:
         print("ALL REFERENCES POINTING TO %s NOT UPDATED - CHECK AND FIX!" % buuid)
 

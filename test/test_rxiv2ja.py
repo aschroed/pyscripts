@@ -1,4 +1,12 @@
+import pytest
 from wrangling import rxiv2ja as rj
+
+
+def test_remove_skipped_vals_no_val():
+    val = None
+    vals2skip = ['test_tag']
+    result = rj.remove_skipped_vals(val, vals2skip)
+    assert not result
 
 
 def test_remove_skipped_vals_string_to_skip():
@@ -74,3 +82,77 @@ def test_remove_skipped_vals_w_item_lookup_and_not_found(mocker):
                       side_effect=side_effect):
         result = rj.remove_skipped_vals(val, vals2skip)
         assert result[0] == val[0]
+
+
+@pytest.fixture
+def old_pub():
+    return {
+        'title': 'The Title',
+        'authors': ['moe', 'curly'],
+        'ID': 'doi:1234',
+        'date_published': '2018-01-01',
+        'published_by': '4DN',
+        'exp_sets_prod_in_pub': ['4DNES1234567', '4DNES7654321'],
+        'exp_sets_used_in_pub': ['4DNES1111111'],
+        'categories': ['basic biology']
+    }
+
+
+@pytest.fixture
+def new_pub():
+    return {
+        'title': 'The Title',
+        'authors': ['moe', 'curly'],
+        'ID': 'PMID:1',
+        'date_published': '2018-12-31',
+    }
+
+
+@pytest.fixture
+def fields2move():
+    return [
+        'categories',
+        'exp_sets_prod_in_pub',
+        'exp_sets_used_in_pub',
+        'published_by'
+    ]
+
+
+def test_create_patch_for_new_from_old_patch_all(old_pub, new_pub, fields2move):
+    patch, s = rj.create_patch_for_new_from_old(old_pub, new_pub, fields2move)
+    for f, v in patch.items():
+        assert old_pub[f] == patch[f]
+    assert not s
+
+
+def test_create_patch_for_new_from_old_patch_some(old_pub, new_pub, fields2move):
+    dfield = 'exp_sets_used_in_pub'
+    del old_pub[dfield]
+    patch, s = rj.create_patch_for_new_from_old(old_pub, new_pub, fields2move)
+    for f, v in patch.items():
+        assert old_pub[f] == patch[f]
+    assert dfield not in patch
+    assert not s
+
+
+def test_create_patch_for_new_from_old_patch_none(old_pub, new_pub, fields2move):
+    for f in fields2move:
+        del old_pub[f]
+    patch, s = rj.create_patch_for_new_from_old(old_pub, new_pub, fields2move)
+    assert not patch
+    assert not s
+
+
+def test_create_patch_for_new_from_old_patch_w_skipped(old_pub, new_pub, fields2move):
+    sfield = 'exp_sets_used_in_pub'
+    new_pub[sfield] = 'existing val'
+    patch, s = rj.create_patch_for_new_from_old(old_pub, new_pub, fields2move)
+    assert sfield not in patch
+    assert s[sfield]['old'] == ['4DNES1111111']
+    assert s[sfield]['new'] == 'existing val'
+
+
+def test_create_patch_for_new_from_old_patch_w_val2skip(old_pub, new_pub, fields2move):
+    v2s = ['4DNES1111111']
+    patch, s = rj.create_patch_for_new_from_old(old_pub, new_pub, fields2move, v2s)
+    assert 'exp_sets_used_in_pub' not in patch
