@@ -129,7 +129,7 @@ def main():  # pragma: no cover
     ok = patch_and_report(connection, patch_dict, skipped, juuid, dryrun)
 
     if not ok:
-        break  # bail out if initial transfer doesn't work
+        sys.exit(1)  # bail out if initial transfer doesn't work
 
     # find items with reference to old paper
     buuid = biorxiv.get('uuid')
