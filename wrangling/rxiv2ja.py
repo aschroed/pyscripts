@@ -62,11 +62,12 @@ def create_patch_for_new_from_old(old, new, fields2move, vals2skip=None):
     return ja_patch_dict, skipped
 
 
-def move_old_url_to_new_aka(oldurl, patch, skip):
-    aka = patch.get('aka')
-    if aka:
-        skip['aka'] = {'old': patch['url'], 'new': aka}
-    patch['aka'] = oldurl
+def move_old_url_to_new_aka(biorxiv, jarticle, patch={}, skip={}):
+    if 'url' in biorxiv:
+        if 'aka' in jarticle:
+            skip['aka'] = {'old': jarticle['aka'], 'new': biorxiv['url']}
+        else:
+            patch['aka'] = biorxiv['url']
     return patch, skip
 
 
@@ -135,8 +136,7 @@ def main():  # pragma: no cover
     # build the patch dictionary
     fields2transfer = ['categories', 'exp_sets_prod_in_pub', 'exp_sets_used_in_pub', 'published_by']
     patch_dict, skipped = create_patch_for_new_from_old(biorxiv, jarticle, fields2transfer, args.vals2skip)
-    if 'url' in biorxiv:
-        patch_dict, skipped = move_old_url_to_new_aka(biorxiv['url'], patch_dict, skipped)
+    patch_dict, skipped = move_old_url_to_new_aka(biorxiv, jarticle, patch_dict, skipped)
 
     # do the patch
     ok = patch_and_report(connection, patch_dict, skipped, juuid, dryrun)
