@@ -3,7 +3,7 @@
 import sys
 import argparse
 from dcicutils.ff_utils import fdn_connection
-from dcicutils.submit_utils import get_FDN  # , patch_FDN
+from dcicutils.submit_utils import get_FDN, patch_FDN
 from pyscripts.wrangling import script_utils as scu
 
 
@@ -16,12 +16,103 @@ def get_args():
                         help="The uuid or ID of the Biorxiv publication")
     parser.add_argument('new',
                         help="The uuid or ID of the Published Journal Article")
+    parser.add_argument('--vals2skip',
+                        nargs='+',
+                        help="A list of values or IDs (uuids, accessions ...) to not transfer")
 
     return parser.parse_args()
 
 
+def remove_skipped_vals(val, vals2skip=None, connection=None):
+    if not (val and vals2skip):
+        return val
+    is_string = False
+    if isinstance(val, str):
+        val = [val]
+        is_string = True
+
+    val = [v for v in val if v not in vals2skip]
+    if connection:
+        vuuids = [scu.get_item_uuid(v, connection) for v in val]
+        skuids = [scu.get_item_uuid(v, connection) for v in vals2skip]
+        for i, v in enumerate(vuuids):
+            if v is not None:
+                if v in skuids:
+                    del val[i]
+    if val:
+        if is_string:
+            return val[0]
+        return val
+    return None
+
+
+def create_patch_for_new_from_old(old, new, fields2move, vals2skip=None):
+    # build the patch dictionary
+    ja_patch_dict = {}
+    skipped = {}  # has info on skipped fields
+    for f in fields2move:
+        val = old.get(f)
+        val = remove_skipped_vals(val, vals2skip)
+        if val:
+            jval = new.get(f)  # see if the field already has data in new item
+            if jval:
+                skipped[f] = {'old': val, 'new': jval}
+                continue
+            ja_patch_dict[f] = val
+    return ja_patch_dict, skipped
+
+
+def move_old_url_to_new_aka(oldurl, patch, skip):
+    aka = patch.get('aka')
+    if aka:
+        skip['aka'] = {'old': patch['url'], 'new': aka}
+    patch['aka'] = oldurl
+    return patch, skip
+
+
+def patch_and_report(connection, patch_d, skipped, uuid2patch, dryrun):
+    # report and patch
+    if dryrun:
+        print('DRY RUN - nothing will be patched to database')
+    if skipped:
+        print('WARNING! - SKIPPING for ', uuid2patch)
+        for f, v in skipped.items():
+            print('Field: %s\tHAS: %s\tNOT ADDED: %s' % (f, v['new'], v['old']))
+
+    if not patch_d:
+        print('NOTHING TO PATCH - ALL DONE!')
+    else:
+        print('PATCHING - ', uuid2patch)
+        for f, v in patch_d.items():
+            print(f, '\t', v)
+
+        if not dryrun:
+            # do the patch
+            res = patch_FDN(uuid2patch, connection, patch_d)
+            if res['status'] == 'success':
+                print("SUCCESS!")
+                return True
+            else:
+                print("FAILED TO PATCH", uuid2patch, "RESPONSE STATUS", res['status'], res['description'])
+                return False
+    return True
+
+
+def find_and_patch_item_references(connection, olduuid, newuuid, dryrun):
+    search = "type=Item&references.uuid=" + olduuid
+    itemids = scu.get_item_ids_from_args([search], connection, True)
+    complete = True
+    if not itemids:
+        print("No references to %s found." % olduuid)
+    for iid in itemids:
+        ok = patch_and_report(connection, {'references': [newuuid]}, None, iid, dryrun)
+        if not ok and complete:
+            complete = False
+    return complete
+
+
 def main():  # pragma: no cover
-    args = get_args(sys.argv[1:])
+    args = get_args()
     try:
         connection = fdn_connection(args.keyfile, keyname=args.key)
     except Exception as e:
@@ -35,48 +126,29 @@ def main():  # pragma: no cover
 
     if biorxiv.get('status') == 'error':
         print('Biorxiv record %s cannot be found' % args.old)
+        sys.exit(1)
     if jarticle.get('status') == 'error':
         print('Journal Article record %s cannot be found' % args.new)
-
+        sys.exit(1)
+    # make sure we can get the uuid to patch
+    juuid = jarticle.get('uuid')
     # build the patch dictionary
-    uuid2patch = jarticle.get('uuid')
-    fields2transfer = ['categories', 'exp_sets_prod_in_pub', 'exp_sets_used_in_pub', 'url']
-    ja_patch_dict = {}
-    skipped = {}  # has info on skipped fields
-    for f in fields2transfer:
-        val = biorxiv.get(f)
-        if val:
-            if f == 'url':
-                f = 'aka'
-            jval = jarticle.get(f)  # see if the field already has data in new item
-            if jval:
-                skipped[f] = {'old': val, 'new': jval}
-                continue
-            ja_patch_dict[f] = val
+    fields2transfer = ['categories', 'exp_sets_prod_in_pub', 'exp_sets_used_in_pub', 'published_by']
+    patch_dict, skipped = create_patch_for_new_from_old(biorxiv, jarticle, fields2transfer, args.vals2skip)
+    if 'url' in biorxiv:
+        patch_dict, skipped = move_old_url_to_new_aka(biorxiv['url'], patch_dict, skipped)
 
-    # report and patch
-    if dryrun:
-        print('DRY RUN - nothing will be patched to database')
-    if skipped:
-        print('WARNING! - SKIPPING for ', args.new)
-        for f, v in skipped.items():
-            print('Field: %s\tHAS: %s\tNOT ADDED: %s' % (f, v['new'], v['old']))
+    # do the patch
+    ok = patch_and_report(connection, patch_dict, skipped, juuid, dryrun)
 
-    if not ja_patch_dict:
-        print('NOTHING TO PATCH - ALL DONE!')
-    else:
-        print('PATCHING - ', args.new)
-        for f, v in ja_patch_dict.items():
-            print(f, '\t', v)
+    if not ok:
+        sys.exit(1)  # bail out if initial transfer doesn't work
 
-        if not dryrun:
-            # do the patch
-            res = {'status': 'success'}
-            #res = patch_FDN(uuid2patch, connection, ja_patch_dict)
-            if res['status'] == 'success':
-                print("SUCCESS!")
-            else:
-                print("FAILED TO PATCH", uuid2patch, "RESPONSE STATUS", res['status'], res['description'])
+    # find items with reference to old paper
+    buuid = biorxiv.get('uuid')
+    complete = find_and_patch_item_references(connection, buuid, juuid, dryrun)
+    if not complete:
+        print("ALL REFERENCES POINTING TO %s NOT UPDATED - CHECK AND FIX!" % buuid)
 
 
 if __name__ == '__main__':
