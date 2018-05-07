@@ -191,9 +191,10 @@ def test_move_old_url_to_new_aka_do_transfer(old_pub, new_pub):
     assert not s
 
 
-def test_patch_and_report_w_dryrun():
-    pass
-    # import pdb; pdb.set_trace()
+def test_patch_and_report_w_dryrun(capsys):
+    import pdb; pdb.set_trace()
+    print('WTF')
+    out = capsys.readouterr()[0]
     # result = rj.patch_and_report(connection, None, None, None, True)
     # out = capsys.readouterr()[0]
     # msg2 = capsys.readouterr()
