@@ -192,8 +192,8 @@ def test_move_old_url_to_new_aka_do_transfer(old_pub, new_pub):
 
 
 def test_patch_and_report_w_dryrun(capsys):
-    out = capsys.readouterr()[0]
-    print(out)
+    print('WTF')
+    out = capsys.readouterr()
     assert True
     # result = rj.patch_and_report(connection, None, None, None, True)
     # out = capsys.readouterr()[0]
