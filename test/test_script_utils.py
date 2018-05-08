@@ -76,11 +76,6 @@ def profiles():
     }
 
 
-@pytest.fixture
-def connection(mocker):
-    return mocker.patch.object(scu.submit_utils, 'FDN_Connection')
-
-
 def test_is_uuid():
     uuids = [
         '231111bc-8535-4448-903e-854af460b254',

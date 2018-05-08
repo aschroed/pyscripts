@@ -156,3 +156,47 @@ def test_create_patch_for_new_from_old_patch_w_val2skip(old_pub, new_pub, fields
     v2s = ['4DNES1111111']
     patch, s = rj.create_patch_for_new_from_old(old_pub, new_pub, fields2move, v2s)
     assert 'exp_sets_used_in_pub' not in patch
+
+
+def test_create_patch_for_new_from_old_patch_w_val2skip_w_multival(old_pub, new_pub, fields2move):
+    v2s = ['4DNES7654321']
+    patch, s = rj.create_patch_for_new_from_old(old_pub, new_pub, fields2move, v2s)
+    assert len(patch['exp_sets_prod_in_pub']) == 1
+    assert patch['exp_sets_prod_in_pub'][0] == '4DNES1234567'
+
+
+def test_move_old_url_to_new_aka_w_existing_aka(old_pub, new_pub):
+    old_pub['url'] = 'oldurl'
+    new_pub['aka'] = 'my old name'
+    p = {'field': 'value'}
+    patch, s = rj.move_old_url_to_new_aka(old_pub, new_pub, p, {})
+    assert p == patch
+    assert s['aka']['new'] == 'oldurl'
+    assert s['aka']['old'] == 'my old name'
+
+
+def test_move_old_url_to_new_aka_w_no_url(old_pub, new_pub):
+    new_pub['aka'] = 'my old name'
+    p = {'field': 'value'}
+    patch, s = rj.move_old_url_to_new_aka(old_pub, new_pub, p, {})
+    assert p == patch
+    assert not s
+
+
+def test_move_old_url_to_new_aka_do_transfer(old_pub, new_pub):
+    old_pub['url'] = 'oldurl'
+    patch, s = rj.move_old_url_to_new_aka(old_pub, new_pub, {}, {})
+    assert 'aka' in patch
+    assert patch['aka'] == 'oldurl'
+    assert not s
+
+
+def test_patch_and_report_w_dryrun(capsys):
+    print('WTF')
+    out = capsys.readouterr()
+    print(out)
+    assert True
+    # result = rj.patch_and_report(connection, None, None, None, True)
+    # out = capsys.readouterr()[0]
+    # msg2 = capsys.readouterr()
+    # assert out == 'DRY RUN - nothing will be patched to database'
