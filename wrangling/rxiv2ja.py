@@ -76,14 +76,14 @@ def patch_and_report(connection, patch_d, skipped, uuid2patch, dryrun):
     if dryrun:
         print('DRY RUN - nothing will be patched to database')
     if skipped:
-        print('WARNING! - SKIPPING for ', uuid2patch)
+        print('WARNING! - SKIPPING for', uuid2patch)
         for f, v in skipped.items():
             print('Field: %s\tHAS: %s\tNOT ADDED: %s' % (f, v['new'], v['old']))
 
     if not patch_d:
         print('NOTHING TO PATCH - ALL DONE!')
     else:
-        print('PATCHING - ', uuid2patch)
+        print('PATCHING -', uuid2patch)
         for f, v in patch_d.items():
             print(f, '\t', v)
 

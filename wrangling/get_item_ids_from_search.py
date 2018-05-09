@@ -24,7 +24,6 @@ def main():
     except Exception as e:
         print("Connection failed")
         sys.exit(1)
-    #import pdb; pdb.set_trace()
     itemids = scu.get_item_ids_from_args([args.query], connection, True)
     for itemid in itemids:
         print(itemid)
