@@ -7,7 +7,7 @@ from dcicutils.submit_utils import get_FDN, patch_FDN
 from pyscripts.wrangling import script_utils as scu
 
 
-def get_args():
+def get_args():  # pragma: no cover
     parser = argparse.ArgumentParser(
         parents=[scu.create_ff_arg_parser()],
         formatter_class=argparse.RawDescriptionHelpFormatter,

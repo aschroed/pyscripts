@@ -38,7 +38,7 @@ def get_args():  # pragma: no cover
     return args
 
 
-def main():
+def main():  # pragma: no cover
     args = get_args()
     try:
         connection = fdn_connection(args.keyfile, keyname=args.key)
@@ -51,8 +51,8 @@ def main():
         # remove explicitly provide types not to tag
         taggable = [t for t in taggable if t not in args.types2exclude]
 
-    seen = [] # only need to add tag once so this keeps track of what's been seen
-    to_patch = {} # keep track of those to patch
+    seen = []   # only need to add tag once so this keeps track of what's been seen
+    to_patch = {}   # keep track of those to patch
     # main loop through the top level item ids
     for itemid in itemids:
         items2tag = {}
@@ -82,5 +82,5 @@ def main():
             print("DRY RUN: patch ", pid, " with ", patch)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()
