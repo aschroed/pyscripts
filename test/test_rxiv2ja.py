@@ -191,12 +191,87 @@ def test_move_old_url_to_new_aka_do_transfer(old_pub, new_pub):
     assert not s
 
 
-def test_patch_and_report_w_dryrun(capsys):
-    print('WTF')
-    out = capsys.readouterr()
-    print(out)
-    assert True
-    # result = rj.patch_and_report(connection, None, None, None, True)
-    # out = capsys.readouterr()[0]
-    # msg2 = capsys.readouterr()
-    # assert out == 'DRY RUN - nothing will be patched to database'
+@pytest.fixture
+def pdict():
+    return {
+        'exp_sets_prod_in_pub': ['4DNES1111111'],
+        'published_by': '4DN'
+    }
+
+
+def test_patch_and_report_w_dryrun_no_data(capsys, connection):
+    result = rj.patch_and_report(connection, None, None, None, True)
+    out = capsys.readouterr()[0]
+    assert 'DRY RUN - nothing will be patched to database' in out
+    assert 'NOTHING TO PATCH - ALL DONE!' in out
+    assert result is True
+
+
+def test_patch_and_report_w_skipped_no_patch(capsys, connection):
+    skip = {
+        'published_by': {'old': 'external', 'new': '4DN'},
+        'categories': {'old': ['basic science'], 'new': ['methods']}
+    }
+    s1 = 'Field: published_by\tHAS: 4DN\tNOT ADDED: external'
+    s2 = "Field: categories\tHAS: ['methods']\tNOT ADDED: ['basic science']"
+    result = rj.patch_and_report(connection, None, skip, 'test_uuid', False)
+    out = capsys.readouterr()[0]
+    assert 'WARNING! - SKIPPING for test_uuid' in out
+    assert s1 in out
+    assert s2 in out
+    assert 'NOTHING TO PATCH - ALL DONE!' in out
+    assert result is True
+
+
+def test_patch_and_report_w_patch(capsys, mocker, connection, pdict):
+    with mocker.patch('wrangling.rxiv2ja.patch_FDN', return_value={'status': 'success'}):
+        result = rj.patch_and_report(connection, pdict, None, 'test_uuid', False)
+        out = capsys.readouterr()[0]
+        assert 'PATCHING - test_uuid' in out
+        for k, v in pdict.items():
+            s = '%s \t %s' % (k, v)
+            assert s in out
+        assert 'SUCCESS!' in out
+        assert result is True
+
+
+def test_patch_and_report_w_fail(capsys, mocker, connection, pdict):
+    with mocker.patch('wrangling.rxiv2ja.patch_FDN', return_value={'status': 'error', 'description': 'woopsie'}):
+        result = rj.patch_and_report(connection, pdict, None, 'test_uuid', False)
+        out = capsys.readouterr()[0]
+        assert 'PATCHING - test_uuid' in out
+        for k, v in pdict.items():
+            s = '%s \t %s' % (k, v)
+            assert s in out
+        assert 'FAILED TO PATCH' in out
+        assert 'woopsie' in out
+        assert not result
+
+
+def test_find_and_patch_item_references_no_refs(capsys, mocker, connection):
+    old_uuid = 'old_uuid'
+    new_uuid = 'new_uuid'
+    output = "No references to %s found." % old_uuid
+    with mocker.patch('wrangling.rxiv2ja.scu.get_item_ids_from_args', return_value=[]):
+        result = rj.find_and_patch_item_references(connection, old_uuid, new_uuid, False)
+        out = capsys.readouterr()[0]
+        assert output in out
+        assert result is True
+
+
+def test_find_and_patch_item_references_w_refs(mocker, connection):
+    old_uuid = 'old_uuid'
+    new_uuid = 'new_uuid'
+    with mocker.patch('wrangling.rxiv2ja.scu.get_item_ids_from_args', return_value=['bs_uuid', 'ex_uuid']):
+        with mocker.patch('wrangling.rxiv2ja.patch_and_report', side_effect=[True, True]):
+            result = rj.find_and_patch_item_references(connection, old_uuid, new_uuid, False)
+            assert result is True
+
+
+def test_find_and_patch_item_references_w_refs_one_fail(mocker, connection):
+    old_uuid = 'old_uuid'
+    new_uuid = 'new_uuid'
+    with mocker.patch('wrangling.rxiv2ja.scu.get_item_ids_from_args', return_value=['bs_uuid', 'ex_uuid1', 'ex_uuid2']):
+        with mocker.patch('wrangling.rxiv2ja.patch_and_report', side_effect=[True, False, True]):
+            result = rj.find_and_patch_item_references(connection, old_uuid, new_uuid, False)
+            assert not result

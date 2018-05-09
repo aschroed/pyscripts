@@ -7,7 +7,7 @@ from dcicutils.submit_utils import get_FDN, patch_FDN
 from pyscripts.wrangling import script_utils as scu
 
 
-def get_args():
+def get_args():  # pragma: no cover
     parser = argparse.ArgumentParser(
         parents=[scu.create_ff_arg_parser()],
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -76,14 +76,14 @@ def patch_and_report(connection, patch_d, skipped, uuid2patch, dryrun):
     if dryrun:
         print('DRY RUN - nothing will be patched to database')
     if skipped:
-        print('WARNING! - SKIPPING for ', uuid2patch)
+        print('WARNING! - SKIPPING for', uuid2patch)
         for f, v in skipped.items():
             print('Field: %s\tHAS: %s\tNOT ADDED: %s' % (f, v['new'], v['old']))
 
     if not patch_d:
         print('NOTHING TO PATCH - ALL DONE!')
     else:
-        print('PATCHING - ', uuid2patch)
+        print('PATCHING -', uuid2patch)
         for f, v in patch_d.items():
             print(f, '\t', v)
 

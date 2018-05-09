@@ -50,7 +50,7 @@ def get_args():  # pragma: no cover
     return args
 
 
-def main():
+def main():  # pragma: no cover
     args = get_args()
     try:
         connection = fdn_connection(args.keyfile, keyname=args.key)
@@ -88,5 +88,5 @@ def main():
         print(a)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

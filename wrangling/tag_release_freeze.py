@@ -29,32 +29,6 @@ def get_attype(res):
     return ty
 
 
-def add_tag2item(connection, item, tag, seen, cnts, itype=None, dbupdate=False):
-    # turns out that we do need to do a get as tags aren't embedded
-    item = get_FDN(item, connection)
-    status = item.get('status')
-    uid = item.get('uuid')
-    if (not uid) or (uid in seen):
-        print("SEEN OR IDLESS ITEM - SKIPPING")
-        cnts['skipped'] += 1
-        return
-    seen.append(uid)
-    if has_released(status):
-        attype = get_attype(item)
-        if not attype:
-            attype = itype
-        patch = make_tag_patch(item, tag)
-        if patch:
-            do_patch(uid, attype, patch, connection, dbupdate, cnts)
-        else:
-            print('NOTHING TO PATCH - skipping ', uid)
-            cnts['skipped'] += 1
-    else:
-        print("STATUS %s doesn't get tagged - skipping %s" % (status, uid))
-        cnts['skipped'] += 1
-    return item
-
-
 def make_tag_patch(item, tag):
     if not scu.has_field_value(item, 'tags', tag):
         # not already tagged with this tag so make a patch and add 2 dict
@@ -86,7 +60,33 @@ def do_patch(uid, type, patch, connection, dbupdate, cnts):
     return
 
 
-def main():
+def add_tag2item(connection, iid, tag, seen, cnts, itype=None, dbupdate=False):
+    # turns out that we do need to do a get as tags aren't embedded
+    item = get_FDN(iid, connection)
+    status = item.get('status')
+    uid = item.get('uuid')
+    if (not uid) or (uid in seen):
+        print("SEEN OR IDLESS ITEM - SKIPPING")
+        cnts['skipped'] += 1
+        return
+    seen.append(uid)
+    if has_released(status):
+        attype = get_attype(item)
+        if not attype:
+            attype = itype
+        patch = make_tag_patch(item, tag)
+        if patch:
+            do_patch(uid, attype, patch, connection, dbupdate, cnts)
+        else:
+            print('NOTHING TO PATCH - skipping %s' % uid)
+            cnts['skipped'] += 1
+    else:
+        print("STATUS %s doesn't get tagged - skipping %s" % (status, uid))
+        cnts['skipped'] += 1
+    return
+
+
+def main():  # pragma: no cover
     args = get_args()
     dbupdate = args.dbupdate
     try:
@@ -127,18 +127,18 @@ def main():
                 cnts['Experiment'] += len(exps)
                 for exp in exps:
                     # import pdb; pdb.set_trace()
-                    exp = add_tag2item(connection, exp, reltag, seen, cnts, 'Experiment', dbupdate)
+                    add_tag2item(connection, exp, reltag, seen, cnts, 'Experiment', dbupdate)
                     files = exp.get('files')
                     if files is not None:
                         cnts['FileFastq'] += len(files)
                         for file in files:
                             file = add_tag2item(connection, file, reltag, seen, cnts, 'FileFastq', dbupdate)
-                    #epfiles = exp.get('processed_files')
-                    epfiles = None  # case for first freeze (no processed files included)
+                    epfiles = exp.get('processed_files')
+                    # epfiles = None  # case for first freeze (no processed files included)
                     if epfiles is not None:
                         cnts['FileProcessed'] += len(epfiles)
                         for epf in epfiles:
-                            epf = add_tag2item(connection, epf, reltag, seen, cnts, 'FileProcessed', dbupdate)
+                            add_tag2item(connection, epf, reltag, seen, cnts, 'FileProcessed', dbupdate)
 
             # check the processed files directly associated to the eset
             # pfiles = res.get('procesed_files')
@@ -146,9 +146,9 @@ def main():
             if pfiles is not None:
                 cnts['FileProcessed'] += len(pfiles)
                 for pf in pfiles:
-                    pf = add_tag2item(connection, pf, reltag, seen, cnts, 'FileProcessed', dbupdate)
+                    add_tag2item(connection, pf, reltag, seen, cnts, 'FileProcessed', dbupdate)
     print(cnts)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

@@ -31,7 +31,6 @@ def main():  # pragma: no cover
         sys.exit(1)
 
     id_list = scu.get_item_ids_from_args(args.input, connection, args.search)
-    #import pdb; pdb.set_trace()
     if args.fields:
         fields = args.fields
 
